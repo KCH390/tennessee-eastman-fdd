@@ -1,0 +1,15 @@
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.4
+matplotlib>=3.8
+seaborn>=0.13
+streamlit>=1.30
+pyreadr>=0.5        # reads the Rieth et al. TEP dataset's .RData files
+xgboost>=2.0
+pytest>=8.0
+jupyter>=1.0
+
+# Track 2 (Cantera physics-based reactor module) will add:
+#   cantera>=3.0
+# Left out for now, deliberately -- don't list a dependency the code
+# doesn't use yet. Add it when Phase 7 actually starts.
