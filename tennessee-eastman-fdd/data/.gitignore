@@ -11,13 +11,13 @@ env/
 
 # Data -- raw/processed datasets can be large; keep out of git.
 # A README in data/ documents how to regenerate them.
-data/raw/*
-data/processed/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
+**/data/raw/*
+**/data/processed/*
+!**/data/raw/.gitkeep
+!**/data/processed/.gitkeep
 
 # Trained models -- regenerable, can be large
-models/*
+**/models/*
 !models/.gitkeep
 
 # Environment / secrets
