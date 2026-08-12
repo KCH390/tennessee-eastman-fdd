@@ -1,0 +1,22 @@
+fault_number,description,type,source_note
+0,Normal operating conditions,None,
+1,"A/C feed ratio, B composition constant (stream 4)",Step,
+2,"B composition, A/C ratio constant (stream 4)",Step,
+3,D feed temperature (stream 2),Step,Widely reported as statistically undetectable -- no observable change in mean/variance
+4,Reactor cooling water inlet temperature,Step,
+5,Condenser cooling water inlet temperature,Step,
+6,A feed loss (stream 1),Step,
+7,C header pressure loss - reduced availability (stream 4),Step,
+8,"A, B, C feed composition (stream 4)",Random variation,
+9,D feed temperature (stream 2),Random variation,Widely reported as statistically undetectable -- no observable change in mean/variance
+10,C feed temperature (stream 4),Random variation,
+11,Reactor cooling water inlet temperature,Random variation,
+12,Condenser cooling water inlet temperature,Random variation,
+13,Reaction kinetics,Slow drift,
+14,Reactor cooling water valve,Sticking,
+15,Condenser cooling water valve,Sticking,Widely reported as statistically undetectable -- no observable change in mean/variance
+16,Unknown,Unknown,
+17,Unknown,Unknown,
+18,Unknown,Unknown,
+19,Unknown,Unknown,
+20,Unknown,Unknown,

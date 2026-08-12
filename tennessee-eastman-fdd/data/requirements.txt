@@ -1,13 +1,21 @@
 pandas>=2.0
 numpy>=1.24
 scikit-learn>=1.4
+joblib>=1.3         # model persistence (used directly by src/train.py)
 matplotlib>=3.8
 seaborn>=0.13
 streamlit>=1.30
 pyreadr>=0.5        # reads the Rieth et al. TEP dataset's .RData files
-xgboost>=2.0
 pytest>=8.0
 jupyter>=1.0
+
+# Not currently used -- src/train.py uses RandomForest and sklearn's native
+# HistGradientBoostingClassifier instead, since xgboost isn't installed in
+# the dev sandbox this project has been built in and couldn't be tested.
+# Uncomment and swap it into src/train.py's MODEL_TYPES if you want to try
+# it on your own machine (same lesson as removing unused ortools from the
+# coffee-erp project -- don't list a dependency the shipped code doesn't use).
+# xgboost>=2.0
 
 # Track 2 (Cantera physics-based reactor module) will add:
 #   cantera>=3.0
