@@ -1,0 +1,53 @@
+tag,column_name,description,units,source_note
+XMEAS(1),xmeas_1,A Feed (stream 1),kscmh,
+XMEAS(2),xmeas_2,D Feed (stream 2),kg/hr,
+XMEAS(3),xmeas_3,E Feed (stream 3),kg/hr,
+XMEAS(4),xmeas_4,A and C Feed (stream 4),kscmh,
+XMEAS(5),xmeas_5,Recycle Flow (stream 8),kscmh,
+XMEAS(6),xmeas_6,Reactor Feed Rate (stream 6),kscmh,
+XMEAS(7),xmeas_7,Reactor Pressure,kPa gauge,
+XMEAS(8),xmeas_8,Reactor Level,%,
+XMEAS(9),xmeas_9,Reactor Temperature,Deg C,
+XMEAS(10),xmeas_10,Purge Rate (stream 9),kscmh,
+XMEAS(11),xmeas_11,Product Separator Temperature,Deg C,
+XMEAS(12),xmeas_12,Product Separator Level,%,
+XMEAS(13),xmeas_13,Product Separator Pressure,kPa gauge,
+XMEAS(14),xmeas_14,Product Separator Underflow (stream 10),m3/hr,
+XMEAS(15),xmeas_15,Stripper Level,%,
+XMEAS(16),xmeas_16,Stripper Pressure,kPa gauge,
+XMEAS(17),xmeas_17,Stripper Underflow (stream 11),m3/hr,
+XMEAS(18),xmeas_18,Stripper Temperature,Deg C,
+XMEAS(19),xmeas_19,Stripper Steam Flow,kg/hr,
+XMEAS(20),xmeas_20,Compressor Work,kW,
+XMEAS(21),xmeas_21,Reactor Cooling Water Outlet Temperature,Deg C,
+XMEAS(22),xmeas_22,Separator Cooling Water Outlet Temperature,Deg C,
+XMEAS(23),xmeas_23,Component A to Reactor (Feed),mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(24),xmeas_24,Component B to Reactor (Feed),mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(25),xmeas_25,Component C to Reactor (Feed),mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(26),xmeas_26,Component D to Reactor (Feed),mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(27),xmeas_27,Component E to Reactor (Feed),mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(28),xmeas_28,Component F to Reactor (Feed),mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(29),xmeas_29,Component A in Purge,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(30),xmeas_30,Component B in Purge,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(31),xmeas_31,Component C in Purge,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(32),xmeas_32,Component D in Purge,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(33),xmeas_33,Component E in Purge,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(34),xmeas_34,Component F in Purge,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(35),xmeas_35,Component G in Purge,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(36),xmeas_36,Component H in Purge,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(37),xmeas_37,Component D in Product,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(38),xmeas_38,Component E in Product,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(39),xmeas_39,Component F in Product,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(40),xmeas_40,Component G in Product,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMEAS(41),xmeas_41,Component H in Product,mol%,Composition analyzer -- real TEP has a sampling delay on this measurement
+XMV(1),xmv_1,D Feed Flow (stream 2),kg/hr,
+XMV(2),xmv_2,E Feed Flow (stream 3),kg/hr,
+XMV(3),xmv_3,A Feed Flow (stream 1),kscmh,
+XMV(4),xmv_4,A and C Feed Flow (stream 4),kscmh,
+XMV(5),xmv_5,Compressor Recycle Valve,%,Some papers report near-constant values for this variable in certain simulations -- worth checking empirically rather than assuming
+XMV(6),xmv_6,Purge Valve (stream 9),%,
+XMV(7),xmv_7,Separator Pot Liquid Flow (stream 10),%,
+XMV(8),xmv_8,Stripper Liquid Product Flow (stream 11),%,
+XMV(9),xmv_9,Stripper Steam Valve,%,Some papers report near-constant values for this variable in certain simulations -- worth checking empirically rather than assuming
+XMV(10),xmv_10,Reactor Cooling Water Flow,%,
+XMV(11),xmv_11,Condenser Cooling Water Flow,%,
