@@ -20,6 +20,7 @@ env/
 **/models/*
 !models/.gitkeep
 
+
 # Environment / secrets
 .env
 
@@ -30,3 +31,6 @@ env/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# pycache
+**/__pycache__/*
