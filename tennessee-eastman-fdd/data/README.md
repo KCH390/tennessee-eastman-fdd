@@ -1,9 +1,7 @@
 # Data
 
 ## raw/
-Source data, downloaded not committed (see .gitignore). Documented here
-once Phase 1 settles which dataset variant we're using (original
-Chiang/Downs & Vogel vs. Rieth et al. 2017) and exactly where to get it.
+Source data, downloaded not committed (see .gitignore) & main README. 
 
 ## processed/
 Cleaned / feature-engineered versions derived from raw/, produced by
