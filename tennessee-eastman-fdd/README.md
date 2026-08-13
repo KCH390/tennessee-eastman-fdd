@@ -21,16 +21,49 @@ operator trusts the system's answer over their own judgment.
 
 ## Architecture
 
-*(to be filled in once the data pipeline and modeling approach are settled
-in Phase 1-2)*
+```
+Harvard Dataverse (.RData)
+        │  src/data_loader.py  (pyreadr)
+        ▼
+data/processed/tep_training.parquet, tep_testing.parquet
+        │  src/features.py
+        │    - per-run rolling mean/std + rate-of-change (get_windowed_features)
+        │    - by-run, fault-stratified train/val split (split_by_run)
+        ▼
+src/train.py
+        - detection: binary fault_active classifier (RandomForest or
+          HistGradientBoosting), class_weight="balanced" to correct the
+          ~91:9 fault/normal imbalance in training data
+        - diagnosis: multiclass faultNumber classifier, fit only on
+          fault_active rows
+        │
+        ▼
+models/detection_<type>.joblib, models/diagnosis_<type>.joblib
+        │  src/evaluate.py (standard_classification_metrics, summarize_detection)
+        ▼
+app.py — Streamlit dashboard (detection timeline, confusion matrix,
+feature importance, simulated live monitoring)
+```
+
+Two correctness constraints run through the whole pipeline and are covered
+by `tests/`:
+- **No leakage across runs.** `simulationRun` numbers repeat across
+  different `faultNumber` scenarios, and rolling/windowed features must
+  never be computed across a run boundary — both `get_windowed_features`
+  and `split_by_run` group by `(faultNumber, simulationRun)` for this.
+- **Onset-aware labeling.** Early samples in "faulty" runs (training
+  samples 1–20, testing samples 1–160) are still normal; `fault_active`
+  already encodes this rather than trusting `faultNumber != 0` alone.
 
 ## Tech Stack
 
 - **Python (pandas, numpy)** — data loading and feature engineering
 - **pyreadr** — reading the TEP dataset's native .RData format
-- **scikit-learn, xgboost** — fault detection (binary) and diagnosis
-  (multiclass) models
-- **Streamlit** — monitoring dashboard
+- **scikit-learn** — fault detection (binary) and diagnosis (multiclass)
+  models: `RandomForestClassifier` and `HistGradientBoostingClassifier`
+- **xgboost** — listed as an alternative model backend to try; not
+  currently wired into `train.py` or benchmarked here
+- **Streamlit, Plotly** — monitoring dashboard
 - **Cantera** *(Track 2, not yet integrated)* — physics-based CSTR reactor
   simulation with real, verifiable chemistry, structurally inspired by TEP
 
@@ -44,10 +77,16 @@ tep-fault-diagnosis/
 │   └── external/           # reference material, small lookup files (checked in)
 ├── models/                 # trained model artifacts (gitignored)
 ├── notebooks/
-│   └── exploration.ipynb   # EDA and modeling notebook (added in Phase 1+)
+│   └── exploration.ipynb   # EDA and modeling notebook
 ├── src/
-│   └── (data loading, feature engineering, training, evaluation -- added Phase 1+)
+│   ├── data_loader.py      # .RData -> processed parquet (pyreadr)
+│   ├── features.py         # windowed features, by-run/fault-stratified split
+│   ├── train.py            # detection + diagnosis model training
+│   └── evaluate.py         # shared metrics helpers
+├── app.py                  # Streamlit dashboard (Phase 5)
 ├── tests/
+│   ├── test_features.py
+│   └── test_train.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -63,8 +102,46 @@ source venv/bin/activate  # venv\Scripts\activate on Windows
 pip install -r requirements.txt
 ```
 
-Data acquisition and the rest of the pipeline will be documented here as
-each phase lands.
+**Data:** download the TEP `.RData` files from the
+[Harvard Dataverse](https://doi.org/10.7910/DVN/6C3JR1) (Rieth et al.,
+2017) into `data/raw/` — see `data/README.md` for the exact filenames
+expected.
+
+**Run the pipeline:**
+
+```bash
+python src/data_loader.py                                          # .RData -> processed parquet
+python src/train.py --model-type random_forest --class-weight balanced   # train + evaluate
+```
+
+`--model-type` also accepts `hist_gradient_boosting`. Run both if you want
+the dashboard's model-type selector to have something to compare.
+
+**Run the dashboard:**
+
+```bash
+streamlit run app.py
+```
+
+## Results
+
+Findings from running the pipeline against the real Rieth et al. (2017)
+dataset:
+
+- **HistGradientBoosting slightly outperforms RandomForest** on both the
+  detection and diagnosis tasks.
+- **Faults 3, 9, and 15 underperform**, consistent with the literature —
+  these are documented as statistically near-indistinguishable from normal
+  operation in TEP, not a modeling gap.
+- **Detection is fast enough to be operationally useful overall, but not
+  uniformly** — faults 13, 18, and 20 show significant detection lag
+  compared to the rest, so a deployment would need fault-specific latency
+  expectations rather than a single SLA.
+- Class-weighting the detection model against the ~91:9 fault/normal
+  imbalance in training meaningfully reduced the false-alarm rate (see
+  `src/train.py` docstring for the controlled test showing the effect in
+  isolation).
+
 
 ## Background
 
