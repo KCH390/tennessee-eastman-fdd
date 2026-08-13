@@ -97,6 +97,66 @@ def test_hist_gradient_boosting_model_type_also_works():
     assert metrics["accuracy"] > 0.9
 
 
+def make_imbalanced_dataset(seed, pos_ratio=0.914, n_normal=600, signal=0.6):
+    """
+    Mimics the real dataset's ~91.4% fault_active imbalance, with a
+    modest-but-real signal in both classes (not a trivially separable
+    toy case) -- tests whether class_weight recovers minority-class
+    performance, not whether the problem is solvable at all.
+    """
+    rng = np.random.RandomState(seed)
+    n_pos = int(n_normal * pos_ratio / (1 - pos_ratio))
+    rows = []
+    sample_counter = 0
+    for is_active, n in [(False, n_normal), (True, n_pos)]:
+        shift = signal if is_active else 0.0
+        for i in range(n):
+            sample_counter += 1
+            row = {
+                "faultNumber": 1 if is_active else 0,
+                "simulationRun": 1,
+                "sample": sample_counter,
+                "fault_active": is_active,
+            }
+            for col in SENSOR_COLUMNS:
+                row[col] = shift + rng.normal(0, 1.0)
+            rows.append(row)
+    df = pd.DataFrame(rows)
+    return df.sample(frac=1, random_state=seed).reset_index(drop=True)
+
+
+def test_class_weight_balanced_reduces_false_alarm_rate_on_imbalanced_data():
+    train_df = make_imbalanced_dataset(seed=1)
+    val_df = make_imbalanced_dataset(seed=2)
+
+    model_unweighted = train_detection_model(train_df, model_type="random_forest", seed=42, class_weight=None)
+    model_weighted = train_detection_model(train_df, model_type="random_forest", seed=42, class_weight="balanced")
+
+    metrics_unweighted = evaluate_detection_model(model_unweighted, val_df)
+    metrics_weighted = evaluate_detection_model(model_weighted, val_df)
+
+    assert metrics_weighted["false_alarm_rate"] < metrics_unweighted["false_alarm_rate"], (
+        f"expected class_weight='balanced' to reduce false_alarm_rate, got "
+        f"unweighted={metrics_unweighted['false_alarm_rate']:.3f} "
+        f"weighted={metrics_weighted['false_alarm_rate']:.3f}"
+    )
+
+
+def test_class_weight_works_for_hist_gradient_boosting_too():
+    # HistGradientBoostingClassifier doesn't support class_weight natively --
+    # this exercises the compute_sample_weight fallback path specifically
+    train_df = make_imbalanced_dataset(seed=3)
+    val_df = make_imbalanced_dataset(seed=4)
+
+    model_unweighted = train_detection_model(train_df, model_type="hist_gradient_boosting", seed=42, class_weight=None)
+    model_weighted = train_detection_model(train_df, model_type="hist_gradient_boosting", seed=42, class_weight="balanced")
+
+    metrics_unweighted = evaluate_detection_model(model_unweighted, val_df)
+    metrics_weighted = evaluate_detection_model(model_weighted, val_df)
+
+    assert metrics_weighted["false_alarm_rate"] < metrics_unweighted["false_alarm_rate"]
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-v"]))
