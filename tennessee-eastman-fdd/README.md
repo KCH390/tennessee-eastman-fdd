@@ -187,9 +187,7 @@ dataset:
   `src/train.py` docstring for the controlled test showing the effect in
   isolation).
 
-*(Numbers/plots to drop in here once finalized — the dashboard's
-Diagnosis tab confusion matrix and Detection Timeline tab are the fastest
-way to regenerate the specific figures for a given model/fault/run.)*
+*(See the Exploration notebook for some plots and numbers)*
 
 ### Does it generalize beyond the canned benchmark? (Phase 9)
 
