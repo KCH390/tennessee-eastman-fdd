@@ -4,8 +4,10 @@ Machine learning fault detection and diagnosis on the Tennessee Eastman
 Process (TEP) — the standard chemical-process benchmark for evaluating
 process monitoring and fault diagnosis methods, introduced by Downs and
 Vogel (1993) from Eastman Chemical Company. Paired with a complementary
-physics-based reactor simulation (Cantera) demonstrating first-principles
-process modeling alongside the data-driven ML work.
+physics-based reactor simulation (Cantera + NRTL) demonstrating
+first-principles process modeling alongside the data-driven ML work —
+and, in Phase 9, confirming the same fault-detection approach generalizes
+to that independently-simulated physical system.
 
 ## Problem Statement
 
@@ -55,6 +57,38 @@ by `tests/`:
   samples 1–20, testing samples 1–160) are still normal; `fault_active`
   already encodes this rather than trusting `faultNumber != 0` alone.
 
+### Track 2: physics-based reactor + column, and the ML generalization test
+
+```
+src/physics/
+  thermo.py      Cantera species thermo (liquid Cp only -- see module docstring
+                  for why Cantera's Reactor/ReactorNet classes aren't used here)
+  reaction.py     Published kinetics + heat of reaction (methyl acetate esterification)
+  cstr.py         Non-isothermal CSTR, two mixing feed streams, cooling jacket
+  nrtl.py         General N-component NRTL activity-coefficient engine
+  vle_params.py   NRTL binary parameters (2 of 6 pairs sourced from real data;
+                  4 acetic-acid pairs deliberately left ideal, not fabricated)
+  properties.py   Antoine vapor-pressure data
+  column.py       Dynamic tray-by-tray distillation column (CMO + rigorous NRTL VLE)
+  scenarios.py    Generates TEP-schema fault data (cooling failure, feed
+                  disturbance) from the CSTR, for reuse by Track 1's ML code
+        │
+        ▼
+src/train_physics.py -- imports train.py's train_detection_model /
+        evaluate_detection_model / train_diagnosis_model / evaluate_diagnosis_model
+        UNMODIFIED, points them at physics/scenarios.py's data instead of TEP's
+        │
+        ▼
+models/physics_detection_<type>.joblib, models/physics_diagnosis_<type>.joblib
+```
+
+This is the real system behind Eastman Chemical's landmark methyl acetate
+reactive-distillation process (Agreda, Partin & Heise, 1990) — same
+Eastman as the TEP benchmark. `demo_track2.py` runs the CSTR through a
+cooling-failure fault and the NRTL module through an azeotrope prediction,
+end to end, producing `track2_cooling_failure.png` and
+`track2_azeotrope.png`.
+
 ## Tech Stack
 
 - **Python (pandas, numpy)** — data loading and feature engineering
@@ -64,8 +98,10 @@ by `tests/`:
 - **xgboost** — listed as an alternative model backend to try; not
   currently wired into `train.py` or benchmarked here
 - **Streamlit, Plotly** — monitoring dashboard
-- **Cantera** *(Track 2, not yet integrated)* — physics-based CSTR reactor
-  simulation with real, verifiable chemistry, structurally inspired by TEP
+- **Cantera** — species thermodynamics for the CSTR (Track 2); see
+  `src/physics/thermo.py` for exactly what it is/isn't used for
+- **scipy, NRTL (hand-implemented)** — CSTR/column ODE integration and
+  non-ideal VLE (Track 2) — see `src/physics/nrtl.py`
 
 ## Project Structure
 
@@ -73,7 +109,8 @@ by `tests/`:
 tep-fault-diagnosis/
 ├── data/
 │   ├── raw/                # downloaded source data (gitignored -- see data/README.md)
-│   ├── processed/          # cleaned / feature-engineered data (gitignored)
+│   ├── processed/          # cleaned / feature-engineered data (gitignored;
+│   │                       #   includes physics_training.parquet, Track 2)
 │   └── external/           # reference material, small lookup files (checked in)
 ├── models/                 # trained model artifacts (gitignored)
 ├── notebooks/
@@ -81,12 +118,20 @@ tep-fault-diagnosis/
 ├── src/
 │   ├── data_loader.py      # .RData -> processed parquet (pyreadr)
 │   ├── features.py         # windowed features, by-run/fault-stratified split
-│   ├── train.py            # detection + diagnosis model training
-│   └── evaluate.py         # shared metrics helpers
+│   ├── train.py            # detection + diagnosis model training (Track 1)
+│   ├── evaluate.py         # shared metrics helpers
+│   ├── train_physics.py    # runs train.py's ML pipeline on Track 2 data (Phase 9)
+│   └── physics/            # Track 2: CSTR + distillation column (see above)
 ├── app.py                  # Streamlit dashboard (Phase 5)
+├── demo_track2.py          # runnable Track 2 demo (CSTR fault + azeotrope plots)
 ├── tests/
 │   ├── test_features.py
-│   └── test_train.py
+│   ├── test_train.py
+│   ├── test_physics_cstr.py
+│   ├── test_nrtl.py
+│   ├── test_column.py
+│   ├── test_scenarios.py
+│   └── _test_support.py    # dependency-free pytest stand-in (no install needed)
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -142,6 +187,40 @@ dataset:
   `src/train.py` docstring for the controlled test showing the effect in
   isolation).
 
+*(Numbers/plots to drop in here once finalized — the dashboard's
+Diagnosis tab confusion matrix and Detection Timeline tab are the fastest
+way to regenerate the specific figures for a given model/fault/run.)*
+
+### Does it generalize beyond the canned benchmark? (Phase 9)
+
+`src/train_physics.py` runs the exact same `train_detection_model` /
+`evaluate_detection_model` / `train_diagnosis_model` / `evaluate_diagnosis_model`
+functions from `src/train.py` — unmodified — against fault-scenario data
+generated from the Track 2 CSTR physics model (`src/physics/scenarios.py`)
+instead of the real TEP dataset. Two fault types (cooling-jacket failure,
+feed-ratio disturbance), 7 physics sensor columns instead of TEP's 52:
+
+| | RandomForest | HistGradientBoosting |
+|---|---|---|
+| Detection accuracy | 98.9% | 98.8% |
+| Detection false-alarm rate | 0.2% | 0.3% |
+| Mean detection delay | 3.6 samples | 4.0 samples |
+| Diagnosis accuracy | 100% | 99.8% |
+
+**Honest read of this, not just the headline numbers**: the near-perfect
+diagnosis accuracy reflects that this system's two fault types have
+physically orthogonal, directly-measured signatures — cooling failure
+shows up as a pure temperature shift with feed flows untouched; feed
+disturbance shows up as a pure flow-rate shift with temperature barely
+moved. That's a much easier separation problem than TEP's 20 real,
+overlapping fault classes (including 3 that are near-undetectable by
+design). The fair takeaway isn't "this problem is easier than TEP, so the
+method is better here" — it's that the same code, same class-weighting
+approach, and same evaluation functions produced sane, well-calibrated
+results on data TEP's benchmark never touched, which is the actual claim
+Phase 9 set out to test.
+
+Run it yourself: `python src/train_physics.py --model-type random_forest`
 
 ## Background
 
